@@ -10,7 +10,7 @@ as development and learning methods, algorithms and paradigms to solve
 challenging computer vision tasks. We focus on recent research trends as they
 apply to practical applications and tools.
 
-## Lab Sessions
+## Lab Sessionss
 The labs are subject to change until the start of the corresponding Lab (see
 table below). They can be handed in latest in the week indicated below
 (rightmost column)
