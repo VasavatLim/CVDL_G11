@@ -5,7 +5,7 @@ In this lab, you will build and experiment with an image classification model us
 
 
 ## Task I: Understand the Provided Python Scripts (1P)
-Your first task is to analyze the provided Python scripts to understand how the initial model works. Focus on the following key aspects:
+Your first task is to analyze the provided Python scripts to understand how the initial model works. Focus on the following key aspects: test
 
 1. **Network Architecture**  
    - Identify and describe the layers of the neural network.
