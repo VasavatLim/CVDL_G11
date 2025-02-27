@@ -1,6 +1,8 @@
 from torch import nn
 
 
+# currently its a fully connected feed forward layer with one hidden layer with 2048 neurons
+# 128*128*3 (x pixel times y pixel times rgb channels ) inpout neurons and 37 output (corresponding to number of cclasses)
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
