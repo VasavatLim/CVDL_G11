@@ -35,6 +35,7 @@ class CNN_classifier(nn.Module):
         self.conv2 = nn.Conv2d(
             in_channels=16, out_channels=16, kernel_size=5, stride=1, padding=2
         )  # set padding to 2 to maintain 22x22 size
+        # we enforce the same output of 11 x 11 here by using adaprtive avg pooling
         self.adaptiveavgpooling = nn.AdaptiveAvgPool2d((11, 11))
         # self.max_pool = nn.MaxPool2d(kernel_size=2, stride=2)
         # assuming 16 feature maps and 22*22 inital image size (reduced half trough pooling)
