@@ -1,7 +1,8 @@
 import torch
 import torchvision.transforms.v2 as transforms
 from datasets import load_dataset
-from model import NeuralNetwork
+from model import NeuralNetwork 
+from model import CNN_classifier
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
@@ -15,8 +16,14 @@ EPOCHS = 5
 IMG_SIZE = (128, 128)
 SEED = 42
 
+FNN_Flag = True
+
 # helper vars
-MODEL_OUT = "model.pth"
+if FNN_Flag == True:
+    MODEL_OUT = "model_fnn.pth"
+else:
+    MODEL_OUT = "model_cnn.pth"
+
 DEVICE = (
     "cuda"
     if torch.cuda.is_available()
@@ -121,7 +128,10 @@ def main():
     # ---------------------------------------------------------------------------------
     # model & optimizer
     # ---------------------------------------------------------------------------------
-    model = NeuralNetwork().to(DEVICE)
+    if FNN_Flag == True:
+        model = NeuralNetwork().to(DEVICE)
+    else:
+        model = CNN_classifier(37).to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
     # usses cross entropy loss, a standard loss for classifications taskss (doesnet work with softmax predicts)
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
@@ -144,8 +154,13 @@ def main():
     # ---------------------------------------------------------------------------------
     # save model
     # ---------------------------------------------------------------------------------
-    torch.save(model.state_dict(), MODEL_OUT)
-    print(f"Saved PyTorch Model State to {MODEL_OUT}")
+    if FNN_Flag == True:
+        torch.save(model.state_dict(), MODEL_OUT)
+        print(f"Saved PyTorch Model_FNN State to {MODEL_OUT}")
+    else:
+        torch.save(model.state_dict(), MODEL_OUT)
+        print(f"Saved PyTorch Model_CNN State to {MODEL_OUT}")
+    loss_fn = nn.CrossEntropyLoss()
 
 
 if __name__ == "__main__":
