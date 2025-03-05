@@ -20,9 +20,7 @@ MODEL_OUT = "model.pth"
 DEVICE = (
     "cuda"
     if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
+    else "mps" if torch.backends.mps.is_available() else "cpu"
 )
 
 
@@ -45,7 +43,7 @@ def evaluate(writer, step, dataloader, model, loss_fn):
     # compute metrics
     test_loss /= num_batches
     correct /= num_samples
-
+    # logfs test and accuaryc for trainig and eval (lsoss and accuracy) to reconstruct learning curve
     # logging
     writer.add_scalar("Loss/Test", test_loss, step)
     writer.add_scalar("Accuracy/Test", correct, step)
@@ -125,8 +123,9 @@ def main():
     # ---------------------------------------------------------------------------------
     model = NeuralNetwork().to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
+    # usses cross entropy loss, a standard loss for classifications taskss (doesnet work with softmax predicts)
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
+    # uses stochastic gradient descent with fixxes learning rate"
     # ---------------------------------------------------------------------------------
     # logging
     # ---------------------------------------------------------------------------------
