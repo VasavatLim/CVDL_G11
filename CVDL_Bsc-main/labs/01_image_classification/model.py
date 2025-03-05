@@ -27,6 +27,7 @@ class CNN_classifier(nn.Module):
         # in_channels = 3 because 3 rgb channels, 16 out = umbers of feature maps extracted, stride =1, padding = 1 adds 1 pixel padding, for zero padding
         # we could later introduce 1 paddinfg in the first layer to FORCE features activation in the first  layer and prevent
         # neurons from dying paddin (optional)
+        # feature extractio n
         self.conv1 = nn.Conv2d(
             in_channels=3, out_channels=16, kernel_size=3, padding=1, stride=1
         )
@@ -35,9 +36,11 @@ class CNN_classifier(nn.Module):
         self.conv2 = nn.Conv2d(
             in_channels=16, out_channels=16, kernel_size=5, stride=1, padding=2
         )  # set padding to 2 to maintain 22x22 size
+        # we enforce the same output of 11 x 11 here by using adaprtive avg pooling
         self.adaptiveavgpooling = nn.AdaptiveAvgPool2d((11, 11))
         # self.max_pool = nn.MaxPool2d(kernel_size=2, stride=2)
         # assuming 16 feature maps and 22*22 inital image size (reduced half trough pooling)
+        # classification
         self.neurallayer = nn.Linear(16 * 11 * 11, 256)
         self.leakyrelu = nn.LeakyReLU()  # leaky relu to prevent vanishing gradient
         self.neurallayer2 = nn.Linear(256, n_classes)
