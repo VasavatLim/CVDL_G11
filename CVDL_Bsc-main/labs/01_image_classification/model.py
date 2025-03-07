@@ -1,5 +1,18 @@
 from torch import nn
 
+# ===========================
+# BUILD THE MODEL
+# ===========================
+
+# This model uses a Convolutional Neural Network (CNN) architecture for image classification.
+# The model includes:
+# 1. Convolutional Layers: Extract spatial features from the input images.
+# 2. Pooling Layer: Reduces the spatial dimensions and makes the model invariant to small translations.
+# 3. Dense (Fully Connected) Layers: Integrate the extracted features into a final prediction vector.
+#    Dense layers are necessary because they learn non-linear combinations of the features
+#    from the convolutional layers, mapping these features to the output class scores.
+
+# Fully connected network (original approach) is kept here for reference.
 
 # currently its a fully connected feed forward layer with one hidden layer with 2048 neurons
 # 128*128*3 (x pixel times y pixel times rgb channels ) inpout neurons and 37 output (corresponding to number of cclasses)
