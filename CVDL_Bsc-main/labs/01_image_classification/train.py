@@ -12,7 +12,7 @@ from torch.utils.tensorboard.writer import SummaryWriter
 # ---------------------------------------------------------------------------------
 LEARNING_RATE = 0.001
 BATCH_SIZE = 32
-EPOCHS = 70
+EPOCHS = 10
 IMG_SIZE = (430, 380)
 SEED = 42
 

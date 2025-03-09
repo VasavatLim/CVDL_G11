@@ -97,7 +97,6 @@ def objective(trial):
     batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
     optimizer_name = trial.suggest_categorical("optimizer", ["SGD", "Adam", "RMSprop"])
     weight_decay = trial.suggest_loguniform("weight_decay", 1e-6, 1e-2)
-    num_filters = trial.suggest_categorical("num_filters", [16, 32, 64])
     dropout_rate = trial.suggest_uniform("dropout", 0.2, 0.5)
     
     # Data Preparation
@@ -141,7 +140,7 @@ def main():
     Runs the Optuna study and trains the final model with the best parameters.
     """
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=30)  # Run 30 trials
+    study.optimize(objective, n_trials=100)  # Run 30 trials
     
     print("Best hyperparameters:", study.best_params)
     
@@ -182,8 +181,8 @@ def train_final_model(params):
     for epoch in range(1, EPOCHS + 1):
         train_one_epoch(data_loader_train, model, loss_fn, optimizer, epoch)
     
-    torch.save(model.state_dict(), "model.pth")
-    print("Final model saved.")
+    torch.save(model.state_dict(), "hyper_model.pth")
+    print("hyper_model saved.")
 
 if __name__ == "__main__":
     torch.manual_seed(SEED)
