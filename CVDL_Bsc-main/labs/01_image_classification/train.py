@@ -1,166 +1,156 @@
 import torch
 import torchvision.transforms.v2 as transforms
+import optuna
 from datasets import load_dataset
-from model import NeuralNetwork 
-from model import CNN_classifier
+from model import NeuralNetwork, CNN_classifier
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
 # ---------------------------------------------------------------------------------
-# hyperparameters
+# Constants
 # ---------------------------------------------------------------------------------
-LEARNING_RATE = 0.001
-BATCH_SIZE = 32
-EPOCHS = 5
-IMG_SIZE = (128, 128)
+IMG_SIZE = (430, 380)
 SEED = 42
-
-FNN_Flag = True
-
-# helper vars
-if FNN_Flag == True:
-    MODEL_OUT = "model_fnn.pth"
-else:
-    MODEL_OUT = "model_cnn.pth"
-
 DEVICE = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps" if torch.backends.mps.is_available() else "cpu"
+    "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 )
-
+FNN_Flag = False  # Toggle between FNN and CNN
 
 # ---------------------------------------------------------------------------------
-# helper funcs
+# Helper Functions
 # ---------------------------------------------------------------------------------
 @torch.inference_mode()
-def evaluate(writer, step, dataloader, model, loss_fn):
+def evaluate(dataloader, model, loss_fn):
+    model.eval()
+    test_loss, correct = 0, 0
     num_samples = len(dataloader.dataset)
     num_batches = len(dataloader)
-    test_loss, correct = 0, 0
-    model.eval()
+    
     for batch in dataloader:
         input, output = batch["img"].to(DEVICE), batch["class"].to(DEVICE)
-
         pred = model(input)
         test_loss += loss_fn(pred, output).item()
         correct += (pred.argmax(1) == output).type(torch.float).sum().item()
-
-    # compute metrics
-    test_loss /= num_batches
-    correct /= num_samples
-    # logfs test and accuaryc for trainig and eval (lsoss and accuracy) to reconstruct learning curve
-    # logging
-    writer.add_scalar("Loss/Test", test_loss, step)
-    writer.add_scalar("Accuracy/Test", correct, step)
-    print(
-        f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n"
-    )
+    
+    return test_loss / num_batches, correct / num_samples
 
 
-def train_one_epoch(writer, step, dataloader, model, loss_fn, optimizer):
+def train_one_epoch(dataloader, model, loss_fn, optimizer, epoch):
+    model.train()
+    train_loss, correct = 0, 0
     num_samples = len(dataloader.dataset)
     num_batches = len(dataloader)
-    train_loss, correct = 0, 0
-    model.train()
+    
     for idx, batch in enumerate(dataloader):
         input, output = batch["img"].to(DEVICE), batch["class"].to(DEVICE)
-
-        # forward
+        optimizer.zero_grad()
         pred = model(input)
         loss = loss_fn(pred, output)
-        train_loss += loss.item()
-        correct += (pred.argmax(1) == output).type(torch.float).sum().item()
-
-        # backward
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
-
-        loss, current = loss.item(), (idx + 1) * len(input)
-        print(f"loss: {loss:>7f}  [{current:>5d}/{num_samples:>5d}]")
-
-    # compute metrics
-    train_loss /= num_batches
-    correct /= num_samples
-
-    # logging
-    writer.add_scalar("Loss/Train", train_loss, step)
-    writer.add_scalar("Accuracy/Train", correct, step)
-    print(
-        f"Train Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {train_loss:>8f} \n"
-    )
+        
+        train_loss += loss.item()
+        correct += (pred.argmax(1) == output).type(torch.float).sum().item()
+        
+        print(f"Epoch {epoch}, Step {idx+1}/{num_batches}: Loss={loss.item():.6f}")
+    
+    return train_loss / num_batches, correct / num_samples
 
 
-def main():
-    # -----------------------------------------------------------------------------
-    # data
-    # -----------------------------------------------------------------------------
-    transform_img = transforms.Compose(
-        [
-            transforms.PILToTensor(),
-            transforms.Resize(IMG_SIZE, antialias=True),
-            transforms.ToDtype(torch.float32, scale=True),
-        ]
-    )
-
+def objective(trial):
+    # Hyperparameters to tune
+    learning_rate = trial.suggest_loguniform("learning_rate", 1e-4, 1e-2)
+    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
+    optimizer_name = trial.suggest_categorical("optimizer", ["SGD", "Adam", "RMSprop"])
+    weight_decay = trial.suggest_loguniform("weight_decay", 1e-6, 1e-2)
+    num_filters = trial.suggest_categorical("num_filters", [16, 32, 64])
+    dropout_rate = trial.suggest_uniform("dropout", 0.2, 0.5)
+    
+    # Data Preparation
+    transform_img = transforms.Compose([
+        transforms.PILToTensor(),
+        transforms.Resize(IMG_SIZE, antialias=True),
+        transforms.ToDtype(torch.float32, scale=True),
+    ])
+    
     def transform(samples):
         samples["img"] = [transform_img(img) for img in samples["img"]]
         samples["class"] = [torch.tensor(c) for c in samples["class"]]
         return samples
-
-    # load dataset & apply transform
-    ds = load_dataset("cvdl/oxford-pets")
-    ds = ds.select_columns(["img", "class"])
-    ds = ds.with_transform(transform)
-
-    # Create data loaders.
-    data_loader_train = DataLoader(
-        ds["train"],
-        batch_size=BATCH_SIZE,
-    )
-    data_loader_valid = DataLoader(
-        ds["valid"],
-        batch_size=1,
-    )
-
-    # ---------------------------------------------------------------------------------
-    # model & optimizer
-    # ---------------------------------------------------------------------------------
-    if FNN_Flag == True:
-        model = NeuralNetwork().to(DEVICE)
-    else:
-        model = CNN_classifier(37).to(DEVICE)
+    
+    ds = load_dataset("cvdl/oxford-pets").select_columns(["img", "class"]).with_transform(transform)
+    data_loader_train = DataLoader(ds["train"], batch_size=batch_size, shuffle=True)
+    data_loader_valid = DataLoader(ds["valid"], batch_size=1)
+    
+    # Model Initialization
+    model = NeuralNetwork().to(DEVICE) if FNN_Flag else CNN_classifier(37).to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
-    # usses cross entropy loss, a standard loss for classifications taskss (doesnet work with softmax predicts)
-    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-    # uses stochastic gradient descent with fixxes learning rate"
-    # ---------------------------------------------------------------------------------
-    # logging
-    # ---------------------------------------------------------------------------------
-    writer = SummaryWriter()
+    
+    optimizer = {
+        "SGD": torch.optim.SGD,
+        "Adam": torch.optim.Adam,
+        "RMSprop": torch.optim.RMSprop,
+    }[optimizer_name](model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    
+    # Training Loop
+    EPOCHS = 5
+    for epoch in range(1, EPOCHS + 1):
+        train_loss, train_acc = train_one_epoch(data_loader_train, model, loss_fn, optimizer, epoch)
+    
+    # Evaluation
+    val_loss, val_acc = evaluate(data_loader_valid, model, loss_fn)
+    
+    return val_loss  # Optuna minimizes the loss
 
-    # ---------------------------------------------------------------------------------
-    # training
-    # ---------------------------------------------------------------------------------
-    for t in range(EPOCHS):
-        print(f"Epoch {t+1}\n-------------------------------")
-        train_one_epoch(writer, t + 1, data_loader_train, model, loss_fn, optimizer)
-        evaluate(writer, t + 1, data_loader_valid, model, loss_fn)
-    writer.close()
-    print("Done!")
 
-    # ---------------------------------------------------------------------------------
-    # save model
-    # ---------------------------------------------------------------------------------
-    if FNN_Flag == True:
-        torch.save(model.state_dict(), MODEL_OUT)
-        print(f"Saved PyTorch Model_FNN State to {MODEL_OUT}")
-    else:
-        torch.save(model.state_dict(), MODEL_OUT)
-        print(f"Saved PyTorch Model_CNN State to {MODEL_OUT}")
+# Run Optuna Study
+def main():
+    study = optuna.create_study(direction="minimize")
+    study.optimize(objective, n_trials= 30)  # Run 5 trials
+    
+    print("Best hyperparameters:", study.best_params)
+    
+    # Train final model with best hyperparameters
+    best_params = study.best_params
+    train_final_model(best_params)
+
+
+def train_final_model(params):
+    print("Training final model with best hyperparameters...")
+    transform_img = transforms.Compose([
+        transforms.PILToTensor(),
+        transforms.Resize(IMG_SIZE, antialias=True),
+        transforms.ToDtype(torch.float32, scale=True),
+    ])
+    
+    def transform(samples):
+        samples["img"] = [transform_img(img) for img in samples["img"]]
+        samples["class"] = [torch.tensor(c) for c in samples["class"]]
+        return samples
+    
+    ds = load_dataset("cvdl/oxford-pets").select_columns(["img", "class"]).with_transform(transform)
+    data_loader_train = DataLoader(ds["train"], batch_size=params["batch_size"], shuffle=True)
+    data_loader_valid = DataLoader(ds["valid"], batch_size=1)
+    
+    model = NeuralNetwork().to(DEVICE) if FNN_Flag else CNN_classifier(37).to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
+    optimizer = {
+        "SGD": torch.optim.SGD,
+        "Adam": torch.optim.Adam,
+        "RMSprop": torch.optim.RMSprop,
+    }[params["optimizer"]](model.parameters(), lr=params["learning_rate"], weight_decay=params["weight_decay"])
+    
+    # Training Loop
+    EPOCHS = 10  # More epochs for final training
+    for epoch in range(1, EPOCHS + 1):
+        train_loss, train_acc = train_one_epoch(data_loader_train, model, loss_fn, optimizer, epoch)
+        print(f"Epoch {epoch}: Train Loss={train_loss:.4f}, Train Acc={train_acc:.4f}")
+    
+    # Save final model
+    model_out = "model_fnn.pth" if FNN_Flag else "model_cnn.pth"
+    torch.save(model.state_dict(), model_out)
+    print(f"Final model saved as {model_out}")
 
 
 if __name__ == "__main__":
