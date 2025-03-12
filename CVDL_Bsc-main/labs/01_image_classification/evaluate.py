@@ -11,7 +11,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 # ---------------------------------------------------------------------------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 IMG_SIZE = (430, 380)
-MODEL_PATHS = ["hyper_model.pth", "model_cnn.pth"]  # Comparing tuned and default models
+MODEL_PATHS = ["hyper_model.pth", "model_cnn.pth",]  # Comparing tuned and default models
 
 # ---------------------------------------------------------------------------------
 # Data Preparation
