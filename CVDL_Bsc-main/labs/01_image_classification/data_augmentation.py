@@ -3,7 +3,11 @@ from torchvision import transforms
 from datasets import load_dataset
 from torch.utils.data import Dataset, ConcatDataset, DataLoader
 
+<<<<<<< HEAD
 
+=======
+# Define the image transformation and augmentation pipelines
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c
 augmentation_transforms = transforms.Compose([
     transforms.RandomHorizontalFlip(),
     transforms.RandomRotation(20),
@@ -28,19 +32,32 @@ class AugmentedDataset(Dataset):
         sample = self.original_dataset[index]
         img, label = sample['img'], sample['class']
 
+<<<<<<< HEAD
+=======
+        # Apply the transformation if provided
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c
         if self.transform:
             img = self.transform(img)
 
         return {'img': img, 'class': torch.tensor(label, dtype=torch.long)}
 
+<<<<<<< HEAD
 
+=======
+# Inside data_augmentation.py
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c
 def load_data(data_augmentation=False):
     """
     Loads the original dataset and applies transformations, optionally combining with augmented data.
     """
     dataset = load_dataset("cvdl/oxford-pets")
+<<<<<<< HEAD
     original_train_set = dataset['train']
     original_valid_set = dataset['test'] 
+=======
+    original_train_set = dataset['train']  # assuming 'train' split
+    original_valid_set = dataset['test']  # assuming 'test' split
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c
 
     if data_augmentation:
         augmented_train_set = AugmentedDataset(original_train_set, transform=augmentation_transforms)
@@ -61,6 +78,7 @@ def load_and_combine_data():
     # Load the original training dataset
     dataset = load_dataset("cvdl/oxford-pets")
     dataset = dataset.select_columns(["img", "class"])
+<<<<<<< HEAD
     original_train_set = dataset["train"] 
     
     print(f"Original training set size: {len(original_train_set)} images")
@@ -71,6 +89,16 @@ def load_and_combine_data():
     # Combine the original dataset with the augmented dataset
     combined_train_set = ConcatDataset([original_train_set, augmented_train_set])
     print(f"Combined training set size: {len(combined_train_set)} images (Original + Augmented)")
+=======
+    original_train_set = dataset["train"]  # assuming 'train' split
+    
+    # Create augmented dataset
+    augmented_train_set = AugmentedDataset(original_train_set, transform=augmentation_transforms)
+    
+    # Combine the original dataset with the augmented dataset
+    combined_train_set = ConcatDataset([original_train_set, augmented_train_set])
+
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c
     return combined_train_set
 
 def save_combined_dataset():

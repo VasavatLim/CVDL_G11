@@ -85,6 +85,7 @@ class CNN_classifier(nn.Module):
         network = self.leakyrelu(network) #//maybe later add a dropout layer
         network = self.dropout(network)
         return self.neurallayer3(network)
+<<<<<<< HEAD
 class PretrainedClassifier(nn.Module):
     def __init__(self, num_classes=37, pretrained=True, dropout=0.3):
         super(PretrainedClassifier, self).__init__()
@@ -103,3 +104,7 @@ class PretrainedClassifier(nn.Module):
     
     def forward(self, x):
         return self.base_model(x)
+=======
+#Trainable parameters in FFNN: 104937509
+#Trainable parameters in CNN: 11335445
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c

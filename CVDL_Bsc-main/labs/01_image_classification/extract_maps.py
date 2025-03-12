@@ -72,5 +72,9 @@ def visualize_feature_maps(feature_maps, save_dir="feature_maps"):
 
     print(f"Feature maps saved in '{save_dir}/' directory.")
 
+<<<<<<< HEAD
 # Generate feature map images   
+=======
+# Generate feature map images
+>>>>>>> ad813dbc454771d089fffab550144744d39ed56c
 visualize_feature_maps(conv1_output)
