@@ -3,7 +3,7 @@ import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms.v2 as transforms
 from datasets import load_dataset
-from model import NeuralNetwork, PretrainedClassifier, CNN_classifier
+from model import NeuralNetwork, CNN_classifier
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
@@ -12,18 +12,15 @@ from torch.utils.tensorboard.writer import SummaryWriter
 # ---------------------------------------------------------------------------------
 LEARNING_RATE = 0.001
 BATCH_SIZE = 32
-EPOCHS = 2
+EPOCHS = 10
 IMG_SIZE = (430, 380)
 SEED = 42
 
 FNN_Flag = False
-Pretrained_Flag = True  # New flag for using pretrained model
 
 # helper vars
 if FNN_Flag:
     MODEL_OUT = "model_fnn.pth"
-elif Pretrained_Flag:
-    MODEL_OUT = "model_pretrained.pth"
 else:
     MODEL_OUT = "model_cnn.pth"
 
@@ -129,8 +126,6 @@ def main():
     # ---------------------------------------------------------------------------------
     if FNN_Flag:
         model = NeuralNetwork().to(DEVICE)
-    elif Pretrained_Flag:
-        model = PretrainedClassifier(num_classes=37).to(DEVICE)
     else:
         model = CNN_classifier(37).to(DEVICE)
 

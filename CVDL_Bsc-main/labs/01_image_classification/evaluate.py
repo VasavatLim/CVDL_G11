@@ -62,9 +62,19 @@ def evaluate(model, dataloader):
         all_preds.extend(predicted_labels.cpu().numpy())
         all_labels.extend(output.cpu().numpy())
 
+    # Accuracy: Measures the proportion of correctly classified instances.
     accuracy = (correct / num_samples) * 100
+    
+    # Precision: Measures how many of the positively predicted samples were actually correct.
+    # A higher precision means fewer false positives.
     precision = precision_score(all_labels, all_preds, average="macro") * 100
+    
+    # Recall: Measures how many actual positive samples were correctly predicted.
+    # A higher recall means fewer false negatives.
     recall = recall_score(all_labels, all_preds, average="macro") * 100
+    
+    # F1-Score: Harmonic mean of precision and recall, balancing both metrics.
+    # It is useful when the dataset is imbalanced.
     f1 = f1_score(all_labels, all_preds, average="macro") * 100
 
     return {
