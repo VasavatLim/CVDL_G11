@@ -83,3 +83,5 @@ class CNN_classifier(nn.Module):
         network = self.leakyrelu(network) #//maybe later add a dropout layer
         network = self.dropout(network)
         return self.neurallayer3(network)
+#Trainable parameters in FFNN: 104937509
+#Trainable parameters in CNN: 11335445
