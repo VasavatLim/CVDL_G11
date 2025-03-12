@@ -17,8 +17,7 @@ IMG_SIZE = (430, 380)
 SEED = 42
 
 FNN_Flag = False
-Pre_Flag = True
-Pretrained_Flag = False  # New flag for using pretrained model
+Pretrained_Flag = True  # New flag for using pretrained model
 
 # helper vars
 if FNN_Flag:

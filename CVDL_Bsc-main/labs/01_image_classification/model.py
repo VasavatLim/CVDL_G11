@@ -1,5 +1,7 @@
-from torch import nn
 
+import torch
+import torch.nn as nn
+import torchvision.models as models  # ✅ FIX: Import torchvision.models
 # ===========================
 # BUILD THE MODEL
 # ===========================
