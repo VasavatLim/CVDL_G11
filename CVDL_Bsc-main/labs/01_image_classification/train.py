@@ -3,7 +3,11 @@ import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms.v2 as transforms
 from datasets import load_dataset
+<<<<<<< HEAD
 from model import NeuralNetwork, PretrainedClassifier, CNN_classifier
+=======
+from model import NeuralNetwork, CNN_classifier
+>>>>>>> Gram_Test
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
@@ -12,7 +16,7 @@ from torch.utils.tensorboard.writer import SummaryWriter
 # ---------------------------------------------------------------------------------
 LEARNING_RATE = 0.001
 BATCH_SIZE = 32
-EPOCHS = 2
+EPOCHS = 10
 IMG_SIZE = (430, 380)
 SEED = 42
 
