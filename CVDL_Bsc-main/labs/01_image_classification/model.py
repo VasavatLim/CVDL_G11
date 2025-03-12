@@ -83,3 +83,21 @@ class CNN_classifier(nn.Module):
         network = self.leakyrelu(network) #//maybe later add a dropout layer
         network = self.dropout(network)
         return self.neurallayer3(network)
+class PretrainedClassifier(nn.Module):
+    def __init__(self, num_classes=37, pretrained=True, dropout=0.3):
+        super(PretrainedClassifier, self).__init__()
+        
+        # Load a pretrained ResNet18 model
+        self.base_model = models.resnet18(pretrained=pretrained)
+        
+        # Modify the final fully connected layer to match the number of classes
+        in_features = self.base_model.fc.in_features
+        self.base_model.fc = nn.Sequential(
+            nn.Linear(in_features, 512),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(512, num_classes)
+        )
+    
+    def forward(self, x):
+        return self.base_model(x)

@@ -1,9 +1,9 @@
 import torch
+import torch.nn as nn
+import torchvision.models as models
 import torchvision.transforms.v2 as transforms
 from datasets import load_dataset
-from model import NeuralNetwork 
-from model import CNN_classifier
-from torch import nn
+from model import NeuralNetwork, PretrainedClassifier, CNN_classifier
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
@@ -17,10 +17,14 @@ IMG_SIZE = (430, 380)
 SEED = 42
 
 FNN_Flag = False
+Pre_Flag = True
+Pretrained_Flag = False  # New flag for using pretrained model
 
 # helper vars
-if FNN_Flag == True:
+if FNN_Flag:
     MODEL_OUT = "model_fnn.pth"
+elif Pretrained_Flag:
+    MODEL_OUT = "model_pretrained.pth"
 else:
     MODEL_OUT = "model_cnn.pth"
 
@@ -29,7 +33,6 @@ DEVICE = (
     if torch.cuda.is_available()
     else "mps" if torch.backends.mps.is_available() else "cpu"
 )
-
 
 # ---------------------------------------------------------------------------------
 # helper funcs
@@ -50,14 +53,12 @@ def evaluate(writer, step, dataloader, model, loss_fn):
     # compute metrics
     test_loss /= num_batches
     correct /= num_samples
-    # logfs test and accuaryc for trainig and eval (lsoss and accuracy) to reconstruct learning curve
     # logging
     writer.add_scalar("Loss/Test", test_loss, step)
     writer.add_scalar("Accuracy/Test", correct, step)
     print(
         f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n"
     )
-
 
 def train_one_epoch(writer, step, dataloader, model, loss_fn, optimizer):
     num_samples = len(dataloader.dataset)
@@ -91,7 +92,6 @@ def train_one_epoch(writer, step, dataloader, model, loss_fn, optimizer):
     print(
         f"Train Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {train_loss:>8f} \n"
     )
-
 
 def main():
     # -----------------------------------------------------------------------------
@@ -128,14 +128,16 @@ def main():
     # ---------------------------------------------------------------------------------
     # model & optimizer
     # ---------------------------------------------------------------------------------
-    if FNN_Flag == True:
+    if FNN_Flag:
         model = NeuralNetwork().to(DEVICE)
+    elif Pretrained_Flag:
+        model = PretrainedClassifier(num_classes=37).to(DEVICE)
     else:
         model = CNN_classifier(37).to(DEVICE)
+
     loss_fn = nn.CrossEntropyLoss()
-    # usses cross entropy loss, a standard loss for classifications taskss (doesnet work with softmax predicts)
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-    # uses stochastic gradient descent with fixxes learning rate"
+    
     # ---------------------------------------------------------------------------------
     # logging
     # ---------------------------------------------------------------------------------
@@ -154,14 +156,8 @@ def main():
     # ---------------------------------------------------------------------------------
     # save model
     # ---------------------------------------------------------------------------------
-    if FNN_Flag == True:
-        torch.save(model.state_dict(), MODEL_OUT)
-        print(f"Saved PyTorch Model_FNN State to {MODEL_OUT}")
-    else:
-        torch.save(model.state_dict(), MODEL_OUT)
-        print(f"Saved PyTorch Model_CNN State to {MODEL_OUT}")
-    loss_fn = nn.CrossEntropyLoss()
-
+    torch.save(model.state_dict(), MODEL_OUT)
+    print(f"Saved PyTorch Model to {MODEL_OUT}")
 
 if __name__ == "__main__":
     torch.manual_seed(SEED)
